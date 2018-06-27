@@ -1,0 +1,24 @@
+<!--index.wxml-->
+<view class="container">
+  <view wx:if="{{title !== ''}}" class="eat-info">
+    <map id="map" 
+      longitude="{{location.lng}}" 
+      latitude="{{location.lat}}" 
+      scale="17"
+      markers="{{markers}}"
+      show-location="true"
+      bindmarkertap="bindMarkTap">
+    </map>
+    <text>店名：{{title}}</text>
+    <text>地址：{{address}}</text>
+    <text>电话：{{tel}}</text>
+    <text>距离：{{distance}} 米</text>
+  </view>
+  <view wx:else class="banner">
+    <image src="../../assets/csm3.jpg" alt="banner" mode="widthFix"></image>
+  </view>
+  <view class="button-group">
+    <button class="btn"  bindtap="bindViewTap" type="primary">{{txtBtn}}</button>
+    <button class="btn"  bindtap="bindMarkTap" wx:if="{{title !== ''}}" type="warn">点我前往</button>
+  </view>
+</view>

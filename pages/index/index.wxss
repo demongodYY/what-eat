@@ -1,0 +1,34 @@
+/**index.wxss**/
+
+
+.button-group {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 8vh;
+  width: 100%;
+}
+.btn {
+  width: 90%;
+  margin: 0 5%;
+}
+.eat-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  margin: 0;
+}
+
+.banner {
+  width: 100%;
+  text-align: center;
+}
+
+.banner image {
+  width: 95%;
+}
+
+#map {
+  width: 100%;
+  height: 40vh;
+  margin-bottom: 5vh;
+}
