@@ -1,4 +1,4 @@
-const formatTime = (date) => {
+export const formatTime = (date) => {
   const year = date.getFullYear();
   const month = date.getMonth() + 1;
   const day = date.getDate();
@@ -13,20 +13,12 @@ const formatTime = (date) => {
   );
 };
 
-const formatNumber = (n) => {
+export const formatNumber = (n) => {
   n = n.toString();
   return n[1] ? n : '0' + n;
 };
 
-const getAIConfig = async () => {
-  const AIConfig = wx.getStorageSync('AI_CONFIG') ?? {};
-  if (AIConfig?.API_KEY) return AIConfig;
-  const { result } = await wx.cloud.callFunction({ name: 'getAIConfig' });
-  wx.setStorageSync('AI_CONFIG', result);
-  return result;
-};
-
-const getMapConfig = async () => {
+export const getMapConfig = async () => {
   const mapConfig = wx.getStorageSync('MAP_CONFIG') ?? {};
   if (mapConfig?.MAP_KEY) return mapConfig;
   const { result } = await wx.cloud.callFunction({ name: 'getMapConfig' });
@@ -34,9 +26,11 @@ const getMapConfig = async () => {
   return result;
 };
 
-module.exports = {
-  formatTime,
-  formatNumber,
-  getAIConfig,
-  getMapConfig,
+export const getEatCompletion = async (eatList) => {
+  //TODO 更多上下文参数
+  const { result } = await wx.cloud.callFunction({
+    name: 'eatCompletion',
+    data: { eatList },
+  });
+  return result;
 };

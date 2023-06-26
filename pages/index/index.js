@@ -1,8 +1,7 @@
 //index.js
-//获取应用实例
-const app = getApp();
+
 const QQMapWx = require('../../libs/qqmap-wx-jssdk.min.js');
-const { getAIConfig, getMapConfig } = require('../../utils/util.js');
+import { getMapConfig, getEatCompletion } from '../../utils/util.js';
 
 Page({
   data: {
@@ -13,21 +12,16 @@ Page({
     distance: -1,
     txtBtn: '点我',
     markers: [],
-    API_KEY: '',
-    API_URL: '',
     qqMapSdk: null,
   },
   async onLoad() {
     try {
       wx.showLoading();
-      const AIConfig = await getAIConfig();
       const MapConfig = await getMapConfig();
       const qqMapSdk = new QQMapWx({
         key: MapConfig.MAP_KEY,
       });
       this.setData({
-        API_KEY: AIConfig.API_KEY,
-        API_URL: AIConfig.API_URL,
         qqMapSdk: qqMapSdk,
       });
     } catch (e) {
@@ -79,27 +73,39 @@ Page({
       address: this.data.address,
     });
   },
-  chooseEat: function (eatList) {
-    console.log(123, eatList);
-    const listLength = eatList.length;
-    const index = Math.floor(Math.random() * listLength);
-    const eatItem = eatList[index];
-    const marker = {
-      id: 0,
-      latitude: eatItem.location.lat,
-      longitude: eatItem.location.lng,
-      title: eatItem.title,
-      iconPath: '../../assets/marker32.png',
-    };
-    console.log(eatItem);
-    this.setData({
-      title: eatItem.title,
-      address: eatItem.address,
-      tel: eatItem.tel,
-      distance: eatItem._distance,
-      location: eatItem.location,
-      txtBtn: '点我换一家',
-      markers: [marker],
-    });
+  chooseEat: async function (eatList) {
+    //TODO change logic to chooses eat
+    try {
+      wx.showLoading({
+        title: '疯狂搜索中...',
+      });
+      const res = await getEatCompletion(eatList);
+      console.log(5555, res);
+
+      //TODO 更改下面逻辑， 从 res 中获取推荐餐馆信息
+
+      const listLength = eatList.length;
+      const index = Math.floor(Math.random() * listLength);
+      const eatItem = eatList[index];
+      const marker = {
+        id: 0,
+        latitude: eatItem.location.lat,
+        longitude: eatItem.location.lng,
+        title: eatItem.title,
+        iconPath: '../../assets/marker32.png',
+      };
+      console.log(eatItem);
+      this.setData({
+        title: eatItem.title,
+        address: eatItem.address,
+        tel: eatItem.tel,
+        distance: eatItem._distance,
+        location: eatItem.location,
+        txtBtn: '点我换一家',
+        markers: [marker],
+      });
+    } finally {
+      wx.hideLoading();
+    }
   },
 });

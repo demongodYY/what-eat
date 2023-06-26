@@ -1,5 +1,5 @@
 {
-  "name": "getAIConfig",
+  "name": "eatCompletion",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "langchain": "^0.0.96",
     "wx-server-sdk": "~2.6.3"
   }
 }
