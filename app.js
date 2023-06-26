@@ -1,9 +1,16 @@
 //app.js
+
+wx.cloud.init({
+  env: 'cloud1-8gydyeo6bb9e2948',
+});
+
+const refreshAIConfig = async () => {
+  const { result } = await wx.cloud.callFunction({ name: 'getAIConfig' });
+  wx.setStorageSync('AI_CONFIG', result);
+};
+
 App({
-  onLaunch: function () {
-    // 展示本地存储能力
-    var logs = wx.getStorageSync('logs') || []
-    logs.unshift(Date.now())
-    wx.setStorageSync('logs', logs)
-  }
-})
+  onLaunch: async function () {
+    await refreshAIConfig();
+  },
+});
