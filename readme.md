@@ -12,6 +12,11 @@
 
 ### 学习资料
 
-https://js.langchain.com/docs/
-https://learn.deeplearning.ai/langchain/lesson/1/introduction
-https://developers.weixin.qq.com/miniprogram/dev/wxcloud/basis/getting-started.html
+- https://js.langchain.com/docs/
+- https://learn.deeplearning.ai/langchain/lesson/1/introduction
+- https://developers.weixin.qq.com/miniprogram/dev/wxcloud/basis/getting-started.html
+
+### 逻辑架构图
+
+![image](https://github.com/demongodYY/what-eat/assets/17036920/1b1ad1b8-14ce-4050-a80a-6b509ca42e62)
+
