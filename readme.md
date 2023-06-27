@@ -4,8 +4,14 @@
 
 ### 依赖库
 
-- 腾讯位置服务 微信小程序JavaScript SDK  
+- 腾讯位置服务 微信小程序 JavaScript SDK
+- 微信小程序 API
+- 微信 serverless 云函数
+- OPENAI GPT（3.5/4）
+- langchain
 
-- 微信小程序API
+### 学习资料
 
-  
+https://js.langchain.com/docs/
+https://learn.deeplearning.ai/langchain/lesson/1/introduction
+https://developers.weixin.qq.com/miniprogram/dev/wxcloud/basis/getting-started.html
