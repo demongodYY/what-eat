@@ -5,6 +5,7 @@ import { getMapConfig, getEatCompletion } from '../../utils/util.js';
 
 Page({
   data: {
+    reason: '',
     address: '',
     title: '',
     location: {},
@@ -74,19 +75,22 @@ Page({
     });
   },
   chooseEat: async function (eatList) {
-    //TODO change logic to chooses eat
     try {
       wx.showLoading({
         title: '疯狂搜索中...',
       });
+      //TODO 更改下面逻辑， 从 res 中获取推荐餐馆信息
+      //调用 AI function
       const res = await getEatCompletion(eatList);
       console.log(5555, res);
+      const resData = JSON.parse(res.match(/\{[\s\S]*\}/)[0])
+      console.log(123, resData);
+      const eatItem = resData.detail;
+      const reason = resData.reason;
 
-      //TODO 更改下面逻辑， 从 res 中获取推荐餐馆信息
-
-      const listLength = eatList.length;
-      const index = Math.floor(Math.random() * listLength);
-      const eatItem = eatList[index];
+      // const listLength = eatList.length;
+      // const index = Math.floor(Math.random() * listLength);
+      // const eatItem = eatList[index];
       const marker = {
         id: 0,
         latitude: eatItem.location.lat,
@@ -94,8 +98,8 @@ Page({
         title: eatItem.title,
         iconPath: '../../assets/marker32.png',
       };
-      console.log(eatItem);
       this.setData({
+        reason: reason,
         title: eatItem.title,
         address: eatItem.address,
         tel: eatItem.tel,

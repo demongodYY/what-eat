@@ -22,13 +22,12 @@ const completion = async (messages) => {
 };
 
 const recommandEat = async (eatList) => {
-  //TODO 提出不满意的问题，动态喜好上下文，输出格式调整等等
+  //TODO
   const messages = [
     new SystemChatMessage(
       `你是一个美食助手，请根据我提供的餐馆列表上下文，来帮助我挑选一家餐馆。餐馆列表上下文会被引用在 ''' 之中，我的喜好会被引用在 --- 之中。
       餐馆列表上下文：'''${JSON.stringify(eatList)}'''
       请只推荐符合要求的一家，并用以下 JSON 格式进行输出：
-      #####推荐餐馆#####
       {
         name: 餐馆的名字
         reason: 推荐的理由
@@ -38,11 +37,11 @@ const recommandEat = async (eatList) => {
     ),
     new HumanChatMessage('---辣的,便宜---'),
   ];
-
   return await completion(messages);
 };
 
 // 云函数入口函数
 exports.main = async (event, context) => {
-  return await recommandEat(event.eatList);
+  const res = await recommandEat(event.eatList);
+  return res.text;
 };

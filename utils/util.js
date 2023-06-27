@@ -29,7 +29,7 @@ export const getMapConfig = async () => {
 export const getEatCompletion = async (eatList) => {
   //TODO 更多上下文参数
   const { result } = await wx.cloud.callFunction({
-    name: 'eatCompletion',
+    name: 'eatChat',
     data: { eatList },
   });
   return result;

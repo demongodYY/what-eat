@@ -9,6 +9,7 @@
       show-location="true"
       bindmarkertap="bindMarkTap">
     </map>
+    <text>推荐理由：{{reason}}</text>
     <text>店名：{{title}}</text>
     <text>地址：{{address}}</text>
     <text>电话：{{tel}}</text>
