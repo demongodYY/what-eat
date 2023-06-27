@@ -12,6 +12,7 @@ const completion = async (messages) => {
   ).data[0];
 
   const chat = new ChatOpenAI({
+    modelName: 'gpt-3.5-turbo', //gpt-4
     openAIApiKey: AIConfig.API_KEY,
     configuration: {
       basePath: AIConfig.API_URL,
