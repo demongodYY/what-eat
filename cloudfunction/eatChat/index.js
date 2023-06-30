@@ -22,7 +22,7 @@ const completion = async (messages) => {
   return await chat.call(messages);
 };
 
-const recommandEat = async (eatList) => {
+const recommendEat = async (eatList) => {
   //TODO
   const messages = [
     new SystemChatMessage(
@@ -36,13 +36,15 @@ const recommandEat = async (eatList) => {
       }
       `
     ),
-    new HumanChatMessage('---辣的,便宜---'),
+    new HumanChatMessage('---不辣的---'),
   ];
-  return await completion(messages);
+  const res = await completion(messages);
+  console.log('@@@res:', res);
+  return res;
 };
 
 // 云函数入口函数
 exports.main = async (event, context) => {
-  const res = await recommandEat(event.eatList);
+  const res = await recommendEat(event.eatList);
   return res.text;
 };

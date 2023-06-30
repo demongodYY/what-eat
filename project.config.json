@@ -1,26 +1,31 @@
 {
-  "description": "项目配置文件。",
-  "packOptions": {
-    "ignore": [],
-    "include": []
-  },
+  "miniprogramRoot": "dist/",
+  "projectname": "what-eat",
+  "description": "吃什么?",
+  "appid": "wxa8a329d5aaaf8770",
   "setting": {
     "urlCheck": true,
-    "es6": true,
-    "postcss": true,
-    "minified": true,
-    "newFeature": true,
+    "es6": false,
+    "enhance": false,
+    "compileHotReLoad": false,
+    "postcss": false,
+    "minified": false,
     "babelSetting": {
       "ignore": [],
       "disablePlugins": [],
       "outputPath": ""
     },
+    "ignoreDevUnusedFiles": false,
+    "ignoreUploadUnusedFiles": false,
     "condition": false
   },
   "compileType": "miniprogram",
   "libVersion": "2.32.3",
-  "appid": "wxa8a329d5aaaf8770",
-  "projectname": "what_eat",
+  "srcMiniprogramRoot": "dist/",
+  "packOptions": {
+    "ignore": [],
+    "include": []
+  },
   "condition": {},
   "editorSetting": {
     "tabIndent": "insertSpaces",

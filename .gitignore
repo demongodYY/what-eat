@@ -1,6 +1,10 @@
+dist/
+deploy_versions/
+.temp/
+.rn_temp/
 node_modules/
-project.private.config.json
 .DS_Store
+.swc
 
 # IDE
 .vscode
