@@ -11,7 +11,7 @@ Page({
     location: {},
     tel: '',
     distance: -1,
-    txtBtn: '点我',
+    txtBtn: '点我试试',
     markers: [],
     qqMapSdk: null,
   },

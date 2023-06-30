@@ -1,6 +1,7 @@
 node_modules/
 project.private.config.json
 .DS_Store
+pnpm-lock.yaml
 
 # IDE
 .vscode
