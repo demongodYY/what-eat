@@ -5,19 +5,19 @@ import {
   showToast,
   showLoading,
   hideLoading,
-} from "@tarojs/taro";
-import { View, Button, Image, Map } from "@tarojs/components";
-import HomeImage from "@/assets/csm3.jpg";
-import marker32 from "@/assets/marker32.png";
-import { useState } from "react";
-import { getEatCompletion, getMapConfig } from "@/utils";
-import styles from "./index.module.less";
+} from '@tarojs/taro';
+import { View, Button, Image, Map } from '@tarojs/components';
+import HomeImage from '@/assets/topic.png';
+import marker32 from '@/assets/marker32.png';
+import { useState } from 'react';
+import { getEatCompletion, getMapConfig } from '@/utils';
+import styles from './index.module.less';
 
 export default function Index() {
   const [data, setData] = useState<any>();
   const [mapKey, setMapKey] = useState<string>();
   useLoad(async () => {
-    console.log("Page loaded.");
+    console.log('Page loaded.');
 
     try {
       showLoading();
@@ -25,7 +25,7 @@ export default function Index() {
       setMapKey(MapConfig.MAP_KEY);
     } catch (e) {
       showToast({
-        title: "哎呀出错了！请刷新页面重试",
+        title: '哎呀出错了！请刷新页面重试',
       });
     } finally {
       hideLoading();
@@ -33,18 +33,18 @@ export default function Index() {
   });
 
   const onSearch = async () => {
-    const { latitude, longitude } = await getLocation({ type: "wgs84" });
+    const { latitude, longitude } = await getLocation({ type: 'wgs84' });
 
     showLoading({
-      title: "疯狂搜索中...",
+      title: '疯狂搜索中...',
     });
     try {
       const res = await request({
-        url: "https://apis.map.qq.com/ws/place/v1/search",
-        method: "GET",
+        url: 'https://apis.map.qq.com/ws/place/v1/search',
+        method: 'GET',
         data: {
           key: mapKey,
-          keyword: "美食",
+          keyword: '美食',
           boundary: `nearby(${latitude},${longitude},500,1)`,
           page_size: 20,
         },
@@ -53,11 +53,11 @@ export default function Index() {
       hideLoading();
       chooseEat(res.data.data);
 
-      console.log("@@@返回的20条附近的数据:", res.data.data);
+      console.log('@@@返回的20条附近的数据:', res.data.data);
     } catch (error) {
       hideLoading();
       showToast({
-        title: "哎呀出错了！请稍后重试一下呢",
+        title: '哎呀出错了！请稍后重试一下呢',
       });
       console.log(error);
     }
@@ -66,31 +66,36 @@ export default function Index() {
   const chooseEat = async (eatList) => {
     try {
       showLoading({
-        title: "疯狂搜索中...",
+        title: '疯狂搜索中...',
       });
       //TODO 更改下面逻辑， 从 res 中获取推荐餐馆信息
       //调用 AI function
-      const res = await getEatCompletion(eatList);
-      console.log("模型返回", res);
-      const resData = JSON.parse(res!.match(/\{[\s\S]*\}/)[0]);
-      console.log("解析后", resData);
-      const eatItem = resData.detail;
-      const reason = resData.reason;
+      const res: any = await getEatCompletion(eatList, ['辛辣', '便宜']);
+      console.log('模型返回', res);
+      const recommendData: { name: string; detail: any; reason: string } =
+        typeof res === 'string'
+          ? JSON.parse(res?.match(/\{[\s\S]*\}/)[0])
+          : res;
+      console.log('解析后', recommendData);
+      const recommendRestaurant = recommendData.detail;
+      const reason = recommendData.reason;
 
       const marker = {
         id: 0,
-        latitude: eatItem.location.lat,
-        longitude: eatItem.location.lng,
-        title: eatItem.title,
+        height: 28,
+        width: 28,
+        latitude: recommendRestaurant.location.lat,
+        longitude: recommendRestaurant.location.lng,
+        title: recommendRestaurant.title,
         iconPath: marker32,
       };
       setData({
         reason: reason,
-        title: eatItem.title,
-        address: eatItem.address,
-        tel: eatItem.tel,
-        distance: eatItem._distance,
-        location: eatItem.location,
+        title: recommendRestaurant.title,
+        address: recommendRestaurant.address,
+        tel: recommendRestaurant.tel,
+        distance: recommendRestaurant._distance,
+        location: recommendRestaurant.location,
         markers: [marker],
       });
     } finally {
@@ -128,7 +133,7 @@ export default function Index() {
       ) : (
         <View className={styles.home}>
           <Image src={HomeImage} mode='widthFix' className={styles.banner} />
-          <Button type='primary' onClick={onSearch}>
+          <Button type='primary' onClick={onSearch} className={styles.tryBtn}>
             点我试试
           </Button>
         </View>

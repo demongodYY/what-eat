@@ -17,16 +17,17 @@ const completion = async (messages) => {
     configuration: {
       basePath: AIConfig.API_URL,
     },
-    temperature: 0,
+    temperature: 0.5,
   });
   return await chat.call(messages);
 };
 
-const recommendEat = async (eatList) => {
+const recommendEat = async (eatList, preference, period) => {
   //TODO
   const messages = [
     new SystemChatMessage(
-      `你是一个美食助手，请根据我提供的餐馆列表上下文，来帮助我挑选一家餐馆。餐馆列表上下文会被引用在 ''' 之中，我的喜好会被引用在 --- 之中。
+      `你是一个美食助手，请根据我提供的餐馆列表上下文，根据我提供的喜好和用餐类型, 来帮助我挑选一家餐馆。
+      餐馆列表上下文会被引用在 ''' 之中，我的喜好会被引用在 --- 之中, 当前用餐类型是:${period}。
       餐馆列表上下文：'''${JSON.stringify(eatList)}'''
       请只推荐符合要求的一家，并用以下 JSON 格式进行输出：
       {
@@ -36,15 +37,14 @@ const recommendEat = async (eatList) => {
       }
       `
     ),
-    new HumanChatMessage('---不辣的---'),
+    new HumanChatMessage(`---${preference}---`),
   ];
   const res = await completion(messages);
-  console.log('@@@res:', res);
   return res;
 };
 
 // 云函数入口函数
 exports.main = async (event, context) => {
-  const res = await recommendEat(event.eatList);
+  const res = await recommendEat(event.eatList, event.preference, event.period);
   return res.text;
 };
