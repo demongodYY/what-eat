@@ -20,7 +20,7 @@ export const formatNumber = (n) => {
   return n[1] ? n : '0' + n;
 };
 
-const getCurrentPeriod = (): string => {
+export const getPeriod = (): string => {
   const currentHour = new Date().getHours();
   if (currentHour < 10) return '早餐';
   if (currentHour > 10 && currentHour < 2) return '午餐';
@@ -42,7 +42,6 @@ export const getEatCompletion = async (eatList, preference: string[]) => {
     data: {
       eatList,
       preference: preference.join(','),
-      period: getCurrentPeriod(),
     },
   });
   return result;

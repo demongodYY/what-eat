@@ -10,7 +10,7 @@ import { View, Button, Image, Map } from '@tarojs/components';
 import HomeImage from '@/assets/topic.png';
 import marker32 from '@/assets/marker32.png';
 import { useState } from 'react';
-import { getEatCompletion, getMapConfig } from '@/utils';
+import { getEatCompletion, getMapConfig, getPeriod } from '@/utils';
 import styles from './index.module.less';
 
 export default function Index() {
@@ -34,7 +34,7 @@ export default function Index() {
 
   const onSearch = async () => {
     const { latitude, longitude } = await getLocation({ type: 'wgs84' });
-
+    const period = getPeriod();
     showLoading({
       title: '疯狂搜索中...',
     });
@@ -44,7 +44,7 @@ export default function Index() {
         method: 'GET',
         data: {
           key: mapKey,
-          keyword: '美食',
+          keyword: `美食, ${period}`,
           boundary: `nearby(${latitude},${longitude},500,1)`,
           page_size: 20,
         },
@@ -140,4 +140,7 @@ export default function Index() {
       )}
     </View>
   );
+}
+function getCurrentPeriod(arg0: number) {
+  throw new Error('Function not implemented.');
 }
