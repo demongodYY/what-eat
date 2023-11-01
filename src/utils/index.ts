@@ -1,5 +1,10 @@
 import Taro from '@tarojs/taro';
 
+export interface ChatItem {
+  role: 'AI' | 'Human';
+  content: string;
+}
+
 export const formatTime = (date) => {
   const year = date.getFullYear();
   const month = date.getMonth() + 1;
@@ -35,12 +40,19 @@ export const getMapConfig = async () => {
   return result;
 };
 
-export const getEatCompletion = async (eatList, preference: string[]) => {
+export const getEatCompletion = async (
+  eatList,
+  chatHistory: ChatItem[] = [],
+  preference: string[] = []
+): Promise<string> => {
+  return '你好，你想吃什么？';
+
   //TODO 更多上下文参数
   const { result } = await Taro.cloud.callFunction({
     name: 'eatChat',
     data: {
       eatList,
+      chatHistory,
       preference: preference.join(','),
     },
   });
