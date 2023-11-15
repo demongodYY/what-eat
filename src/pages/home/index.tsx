@@ -97,11 +97,13 @@ export default function Index() {
     const resFromAI = await getEatCompletion(
       eatItemsList,
       chatHistoryBefore
-    ) as string;
+      ) as any;
+    console.log("response from ai", typeof resFromAI);
     const AIResponseHistory: ChatItem[] = [
       ...chatHistoryBefore,
-      { role: 'AI', content: resFromAI },
+      { role: 'AI', content: typeof resFromAI === "string" ? resFromAI : resFromAI.name },
     ];
+
     setChatHistory(AIResponseHistory);
   };
 

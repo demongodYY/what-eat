@@ -22,11 +22,29 @@ const completion = async (messages) => {
   return await chat.call(messages);
 };
 
-const recommendEat = async (eatList, preference) => {
+const getRecommendRestaurant = async(eatList, history) => {
+  const restaurantInfo = eatList.map(({title, address, category}) => {
+    return {title, address, category}
+  })
+  const historyMessages = history.map((msg) => {
+    if (msg.role === 'AI') {
+      return new AIChatMessage(msg.content);
+    } else {
+      return new HumanChatMessage(msg.content);
+    }
+  });
+  if (history.length === 6) {
+    return await recommendEat(restaurantInfo, historyMessages);
+  }
+
+  return await getPromptQuestion(restaurantInfo, historyMessages);
+}
+
+const recommendEat = async (eatList, historyMessages) => {
   const messages = [
     new SystemChatMessage(
       `你是一个美食助手，请根据我提供的餐馆列表上下文，根据我提供的喜好, 来帮助我挑选一家餐馆。
-      餐馆列表上下文会被引用在 ''' 之中，我的喜好会被引用在 --- 之中。
+      餐馆列表上下文会被引用在 ''' 之中
       餐馆列表上下文：'''${JSON.stringify(eatList)}'''
       请只推荐符合要求的一家，并用以下 JSON 格式进行输出：
       {
@@ -36,21 +54,13 @@ const recommendEat = async (eatList, preference) => {
       }
       `
     ),
-    new HumanChatMessage(`---${preference}---`),
+    ...historyMessages
   ];
   const res = await completion(messages);
   return res;
 };
 
-const getPromptQuestion = async (eatList, history) => {
-  const message = history.map((msg) => {
-    if (msg.role === 'AI') {
-      return new AIChatMessage(msg.content);
-    } else {
-      return new HumanChatMessage(msg.content);
-    }
-  });
-
+const getPromptQuestion = async (eatList, historyMessages) => {
   console.log("enter get prompt question");
   const messages = [
     new SystemChatMessage(
@@ -60,13 +70,10 @@ const getPromptQuestion = async (eatList, history) => {
       不要提供和口味无关的问题，比如“您是否需要早餐店提供电话预定服务？”和“您是否对早餐店的环境有特别的要求，比如需要安静的环境，或者喜欢热闹的氛围？”等等
       餐馆列表上下文会被引用在 ''' 之中。
       餐馆列表上下文：'''${JSON.stringify(eatList)}'''
-      历史提问会被引用在 --- 之中, 历史问题可能是空的
-      请每次都问更详细的问题,不要重复类似的问题，比如历史提问中有“您更喜欢哪种类型的晚餐，是传统的中式晚餐，还是湘菜系的晚餐？”和“粤菜”的回到
-      下一个问题应该类似于“想吃“
+      请每次都问更详细的问题,不要重复类似的问题
       如果没有新问题了，请返回“我没有新问题了”
-      请将生成的问题用字符串输出，例如"问题1"
     `),
-    ...message
+    ...historyMessages
   ];
   const res = await completion(messages);
   console.log("生成的问题：", res.text);
@@ -76,6 +83,6 @@ const getPromptQuestion = async (eatList, history) => {
 
 // 云函数入口函数
 exports.main = async (event, context) => {
-  const res = await getPromptQuestion(event.eatList, event.chatHistory);
+  const res = await getRecommendRestaurant(event.eatList, event.chatHistory);
   return res.text;
 };
