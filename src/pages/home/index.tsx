@@ -52,7 +52,6 @@ export default function Index() {
     showLoading({
       title: '疯狂搜索中...',
     });
-    const period = getPeriod();
     try {
       const { latitude, longitude } = await getLocation({ type: 'wgs84' });
       const translateLocationRes = await request({
@@ -71,7 +70,7 @@ export default function Index() {
         method: 'GET',
         data: {
           key: mapKey,
-          keyword: `美食, ${period}`,
+          keyword: `美食`,
           boundary: `nearby(${locations[0].lat},${locations[0].lng},2000,1)`,
           page_size: 20,
         },
@@ -95,10 +94,10 @@ export default function Index() {
     eatItemsList: any[],
     chatHistoryBefore: ChatItem[]
   ) => {
-    const resFromAI: string = await getEatCompletion(
+    const resFromAI = await getEatCompletion(
       eatItemsList,
       chatHistoryBefore
-    );
+    ) as string;
     const AIResponseHistory: ChatItem[] = [
       ...chatHistoryBefore,
       { role: 'AI', content: resFromAI },

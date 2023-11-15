@@ -42,19 +42,15 @@ export const getMapConfig = async () => {
 
 export const getEatCompletion = async (
   eatList,
-  chatHistory: ChatItem[] = [],
-  preference: string[] = []
-): Promise<string> => {
-  return '你好，你想吃什么？';
-
-  //TODO 更多上下文参数
+  chatHistory: ChatItem[] = []
+) => {
   const { result } = await Taro.cloud.callFunction({
     name: 'eatChat',
     data: {
       eatList,
-      chatHistory,
-      preference: preference.join(','),
+      chatHistory
     },
   });
+
   return result;
 };
