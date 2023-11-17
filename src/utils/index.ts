@@ -44,11 +44,25 @@ export const getEatCompletion = async (
   eatList,
   chatHistory: ChatItem[] = []
 ) => {
+  const res = await Taro.cloud.callContainer({
+    path: '/api/recommend',
+    header: {
+      'X-WX-SERVICE': 'express-fh13',
+    },
+    timeout: 15 * 1000,
+    method: 'POST',
+    data: {
+      history: chatHistory,
+      eatList,
+    },
+  });
+  return res.data?.data;
+
   const { result } = await Taro.cloud.callFunction({
     name: 'eatChat',
     data: {
       eatList,
-      chatHistory
+      chatHistory,
     },
   });
 

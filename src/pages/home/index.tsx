@@ -1,7 +1,7 @@
+import { useRef, useState } from 'react';
 import {
   useLoad,
-  request,
-  getLocation,
+  useReady,
   showToast,
   showLoading,
   hideLoading,
@@ -9,139 +9,89 @@ import {
 import {
   View,
   Button,
-  Image,
-  Map,
+  Text,
+  // Image,
   Input,
   ScrollView,
 } from '@tarojs/components';
-import HomeImage from '@/assets/topic.png';
-import marker32 from '@/assets/marker32.png';
-import { useState } from 'react';
-import { getEatCompletion, getMapConfig, getPeriod } from '@/utils';
+// import HomeImage from '@/assets/topic.png';
+import QQMapWX from '@/assets/js/qqmap-wx-jssdk1.2/qqmap-wx-jssdk.min.js';
+import { getEatCompletion } from '@/utils';
+import RestaurantCard from './components/restaurantCard';
 import styles from './index.module.less';
 
+const MAP_SDK_KEY = '34ZBZ-AMFCO-2ZGWD-SNT2V-AYMDJ-QFF63';
 export interface ChatItem {
   role: 'AI' | 'Human';
   content: string;
 }
 
 export default function Index() {
-  const [data, setData] = useState<any>();
   const [inputString, setInputString] = useState<string>('');
   const [chatHistory, setChatHistory] = useState<ChatItem[]>([]);
   const [eatList, setEatList] = useState<any[]>([]);
-  useLoad(async () => {
-    console.log('Page loaded.');
+  const mapSdkRef = useRef<QQMapWX | null>(null);
 
-    try {
-      showLoading();
-      const MapConfig = await getMapConfig();
-      const res = await onSearch(MapConfig.MAP_KEY);
-      setEatList(res);
-      completeWithAI(res, []);
-    } catch (e) {
-      showToast({
-        title: '哎呀出错了！请刷新页面重试',
-      });
-    } finally {
-      hideLoading();
-    }
+  useLoad(async () => {
+    mapSdkRef.current = new QQMapWX({
+      key: MAP_SDK_KEY,
+    });
   });
 
-  const onSearch = async (mapKey: string) => {
-    showLoading({
-      title: '疯狂搜索中...',
+  useReady(async () => {
+    const restaurantList = await onSearch();
+    setEatList(restaurantList);
+    await completeWithAI(restaurantList, []);
+  });
+
+  const onSearch = async () => {
+    return new Promise<any[]>((resolve, reject) => {
+      showLoading({
+        title: '疯狂搜索中...',
+      });
+      mapSdkRef.current?.search({
+        keyword: '餐馆',
+        page_size: 20,
+        filter: 'category<>冷饮店,娱乐休闲',
+        success: (res) => {
+          resolve(res.data);
+        },
+        failed: (res) => {
+          console.error('map search error: ', res);
+          showToast({
+            title: '哎呀出错了！请刷新页面重试',
+          });
+          reject(res);
+        },
+        complete: () => {
+          hideLoading();
+        },
+      });
     });
-    try {
-      const { latitude, longitude } = await getLocation({ type: 'wgs84' });
-      const translateLocationRes = await request({
-        url: 'https://apis.map.qq.com/ws/coord/v1/translate',
-        method: 'GET',
-        data: {
-          key: mapKey,
-          type: 1,
-          locations: `${latitude},${longitude}`,
-        },
-      });
-      const { locations } = translateLocationRes.data;
-      console.log(123, locations, latitude, longitude);
-      const res = await request({
-        url: 'https://apis.map.qq.com/ws/place/v1/search',
-        method: 'GET',
-        data: {
-          key: mapKey,
-          keyword: `美食`,
-          boundary: `nearby(${locations[0].lat},${locations[0].lng},2000,1)`,
-          page_size: 20,
-        },
-      });
-
-      hideLoading();
-      return res.data.data;
-      // chooseEat(res.data.data);
-
-      console.log('@@@返回的20条附近的数据:', res.data.data);
-    } catch (error) {
-      hideLoading();
-      showToast({
-        title: '哎呀出错了！请稍后重试一下呢',
-      });
-      console.log(error);
-    }
   };
 
   const completeWithAI = async (
     eatItemsList: any[],
     chatHistoryBefore: ChatItem[]
   ) => {
-    const resFromAI = await getEatCompletion(
-      eatItemsList,
-      chatHistoryBefore
-      ) as any;
-    console.log("response from ai", typeof resFromAI);
-    const AIResponseHistory: ChatItem[] = [
-      ...chatHistoryBefore,
-      { role: 'AI', content: typeof resFromAI === "string" ? resFromAI : resFromAI.name },
-    ];
-
-    setChatHistory(AIResponseHistory);
-  };
-
-  const chooseEat = async (eatList) => {
+    showLoading({
+      title: 'AI 思考中...',
+    });
     try {
-      showLoading({
-        title: '疯狂搜索中...',
+      const resFromAI = await getEatCompletion(eatItemsList, chatHistoryBefore);
+      const AIResponseHistory: ChatItem[] = [
+        ...chatHistoryBefore,
+        {
+          role: 'AI',
+          content: resFromAI,
+        },
+      ];
+      setChatHistory(AIResponseHistory);
+    } catch (e) {
+      showToast({
+        title: '哎呀出错了！重新再问一下吧',
       });
-      //TODO 更改下面逻辑， 从 res 中获取推荐餐馆信息
-      //调用 AI function
-      const res: any = await getEatCompletion(eatList, ['辛辣', '便宜']);
-      console.log('模型返回', res);
-      const recommendData: { name: string; detail: any; reason: string } =
-        typeof res === 'string'
-          ? JSON.parse(res?.match(/\{[\s\S]*\}/)[0])
-          : res;
-      console.log('解析后', recommendData);
-      const recommendRestaurant = recommendData.detail;
-      const reason = recommendData.reason;
-
-      const marker = {
-        id: 0,
-        height: 28,
-        width: 28,
-        latitude: recommendRestaurant.location.lat,
-        longitude: recommendRestaurant.location.lng,
-        title: recommendRestaurant.title,
-        iconPath: marker32,
-      };
-      setData({
-        reason: reason,
-        title: recommendRestaurant.title,
-        address: recommendRestaurant.address,
-        tel: recommendRestaurant.tel,
-        distance: recommendRestaurant._distance,
-        location: recommendRestaurant.location,
-        markers: [marker],
-      });
+      console.error(e);
     } finally {
       hideLoading();
     }
@@ -149,84 +99,75 @@ export default function Index() {
 
   return (
     <View>
-      {data?.markers ? (
-        <View className={styles.result}>
-          <Map
-            id="map"
-            className={styles.map}
-            markers={data.markers}
-            longitude={data.location.lng}
-            latitude={data.location.lat}
-            scale={17}
-            showLocation
-          />
-          <View className={styles.recommend}>
-            <View>推荐理由：{data.reason}</View>
-            <View>店名：{data.title}</View>
-            <View>地址：{data.address}</View>
-            <View>电话：{data.tel}</View>
-            <View>距离：{data.distance} 米</View>
-          </View>
-          <View className={styles.operation}>
-            <Button type="primary" onClick={onSearch}>
-              点我换一家
-            </Button>
-            <Button type="warn">点击前往</Button>
-          </View>
-        </View>
-      ) : (
-        <View className={styles.home}>
-          {/* <Image src={HomeImage} mode="widthFix" className={styles.banner} />
+      <View className={styles.home}>
+        {/* <Image src={HomeImage} mode="widthFix" className={styles.banner} />
           <Button type="primary" onClick={onSearch} className={styles.tryBtn}>
             点我试试
           </Button> */}
-          <ScrollView
-            className={styles.chatWrapper}
-            scrollY
-            scrollWithAnimation
+        <ScrollView className={styles.chatWrapper} scrollY scrollWithAnimation>
+          {chatHistory.map((item, index) => {
+            const { role, content } = item;
+            const recommand = content.match(/\{[\s\S]*\}/);
+            if (!recommand) {
+              return (
+                <View
+                  className={
+                    role === 'AI' ? styles.chatItemAI : styles.chatItemHuman
+                  }
+                  key={index}
+                >
+                  <Text>
+                    {role}: {content}
+                  </Text>
+                </View>
+              );
+            } else {
+              const restInfo = JSON.parse(recommand[0]);
+              const { name, reason } = restInfo;
+              const restDetail = eatList.find(({ title }) => title === name);
+              console.log(12345, restDetail);
+              return (
+                <>
+                  <View className={styles.chatItemAI} key={index}>
+                    <Text>
+                      {role}: {reason}
+                    </Text>
+                  </View>
+                  <View className={styles.chatItemAI} key={index}>
+                    <RestaurantCard restaurant={restDetail} />
+                  </View>
+                </>
+              );
+            }
+          })}
+        </ScrollView>
+
+        <View className={styles.bottomInputWrapper}>
+          <Input
+            className={styles.bottomInput}
+            value={inputString}
+            onInput={(evt) => setInputString(evt.detail.value)}
+            type="text"
+          />
+          <Button
+            className={styles.bottomBtn}
+            onClick={async () => {
+              const humanInputHistory: ChatItem[] = [
+                ...chatHistory,
+                { role: 'Human', content: inputString },
+              ];
+
+              // request to AI get response
+              completeWithAI(eatList, humanInputHistory);
+
+              setInputString('');
+            }}
+            type="warn"
           >
-            {chatHistory.map((item, index) => (
-              <View
-                className={
-                  item.role === 'AI' ? styles.chatItemAI : styles.chatItemHuman
-                }
-                key={index}
-              >
-                {item.role}: {item.content}
-              </View>
-            ))}
-          </ScrollView>
-
-          <View className={styles.bottomInputWrapper}>
-            <Input
-              className={styles.bottomInput}
-              value={inputString}
-              onInput={(evt) => setInputString(evt.detail.value)}
-              type="text"
-            />
-            <Button
-              className={styles.bottomBtn}
-              onClick={async () => {
-                const humanInputHistory: ChatItem[] = [
-                  ...chatHistory,
-                  { role: 'Human', content: inputString },
-                ];
-
-                // request to AI get response
-                completeWithAI(eatList, humanInputHistory);
-
-                setInputString('');
-              }}
-              type="warn"
-            >
-              提交
-            </Button>
-          </View>
+            提交
+          </Button>
         </View>
-      )}
+      </View>
     </View>
   );
-}
-function getCurrentPeriod(arg0: number) {
-  throw new Error('Function not implemented.');
 }
