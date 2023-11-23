@@ -16,7 +16,7 @@ import {
 } from '@tarojs/components';
 // import HomeImage from '@/assets/topic.png';
 import QQMapWX from '@/assets/js/qqmap-wx-jssdk1.2/qqmap-wx-jssdk.min.js';
-import { getEatCompletion } from '@/utils';
+import { getQuestionsCompletion, getRestaurantCompletion } from '@/utils';
 import RestaurantCard from './components/restaurantCard';
 import styles from './index.module.less';
 
@@ -29,7 +29,7 @@ export interface ChatItem {
 export default function Index() {
   const [inputString, setInputString] = useState<string>('');
   const [chatHistory, setChatHistory] = useState<ChatItem[]>([]);
-  const [eatList, setEatList] = useState<any[]>([]);
+  const [recommandRestaurant, setRecommandRestaurant] = useState<any>(undefined);
   const mapSdkRef = useRef<QQMapWX | null>(null);
 
   useLoad(async () => {
@@ -39,18 +39,17 @@ export default function Index() {
   });
 
   useReady(async () => {
-    const restaurantList = await onSearch();
-    setEatList(restaurantList);
-    await completeWithAI(restaurantList, []);
+    setRecommandRestaurant(undefined);
+    await chatWithAI([]);
   });
 
-  const onSearch = async () => {
+  const onSearch = async (keyword: string) => {
     return new Promise<any[]>((resolve, reject) => {
       showLoading({
         title: '疯狂搜索中...',
       });
       mapSdkRef.current?.search({
-        keyword: '餐馆',
+        keyword: keyword,
         page_size: 20,
         filter: 'category<>冷饮店,娱乐休闲',
         success: (res) => {
@@ -70,23 +69,37 @@ export default function Index() {
     });
   };
 
-  const completeWithAI = async (
-    eatItemsList: any[],
+  const chatWithAI = async (
     chatHistoryBefore: ChatItem[]
   ) => {
     showLoading({
       title: 'AI 思考中...',
     });
     try {
-      const resFromAI = await getEatCompletion(eatItemsList, chatHistoryBefore);
-      const AIResponseHistory: ChatItem[] = [
-        ...chatHistoryBefore,
-        {
-          role: 'AI',
-          content: resFromAI,
-        },
-      ];
-      setChatHistory(AIResponseHistory);
+      const resFromAI = await getQuestionsCompletion(chatHistoryBefore);
+      const { question } = JSON.parse(resFromAI);
+      console.log("resFromAI", resFromAI);
+      if (question) {
+        const AIResponseHistory: ChatItem[] = [
+          ...chatHistoryBefore,
+          {
+            role: 'AI',
+            content: question,
+          },
+        ];
+        setChatHistory(AIResponseHistory);
+      } else {
+        const { keyword } = JSON.parse(resFromAI);
+        console.log("keyword", keyword);
+        const foundRestaurants = await onSearch(keyword);
+        const recommandRestaurant = await getRestaurantCompletion(foundRestaurants, chatHistory);
+        const { name } = JSON.parse(recommandRestaurant);
+        const restDetail = foundRestaurants.find(({ title }) => title === name);
+        console.log("recommandRestaurant", recommandRestaurant);
+        setRecommandRestaurant(restDetail);
+        console.log("recommandRestaurant", recommandRestaurant);
+      }
+
     } catch (e) {
       showToast({
         title: '哎呀出错了！重新再问一下吧',
@@ -107,39 +120,23 @@ export default function Index() {
         <ScrollView className={styles.chatWrapper} scrollY scrollWithAnimation>
           {chatHistory.map((item, index) => {
             const { role, content } = item;
-            const recommand = content.match(/\{[\s\S]*\}/);
-            if (!recommand) {
-              return (
-                <View
-                  className={
-                    role === 'AI' ? styles.chatItemAI : styles.chatItemHuman
-                  }
-                  key={index}
-                >
-                  <Text>
-                    {role}: {content}
-                  </Text>
-                </View>
-              );
-            } else {
-              const restInfo = JSON.parse(recommand[0]);
-              const { name, reason } = restInfo;
-              const restDetail = eatList.find(({ title }) => title === name);
-              console.log(12345, restDetail);
-              return (
-                <>
-                  <View className={styles.chatItemAI} key={index}>
-                    <Text>
-                      {role}: {reason}
-                    </Text>
-                  </View>
-                  <View className={styles.chatItemAI} key={index}>
-                    <RestaurantCard restaurant={restDetail} />
-                  </View>
-                </>
-              );
-            }
+            return (
+              <View
+                className={
+                  role === 'AI' ? styles.chatItemAI : styles.chatItemHuman
+                }
+                key={index}
+              >
+                <Text>
+                  {role}: {content}
+                </Text>
+              </View>
+            );
           })}
+          {recommandRestaurant &&
+            <View className={styles.chatItemAI}>
+              <RestaurantCard restaurant={recommandRestaurant} />
+            </View>}
         </ScrollView>
 
         <View className={styles.bottomInputWrapper}>
@@ -156,10 +153,7 @@ export default function Index() {
                 ...chatHistory,
                 { role: 'Human', content: inputString },
               ];
-
-              // request to AI get response
-              completeWithAI(eatList, humanInputHistory);
-
+              chatWithAI(humanInputHistory);
               setInputString('');
             }}
             type="warn"

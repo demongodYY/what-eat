@@ -40,12 +40,29 @@ export const getMapConfig = async () => {
   return result;
 };
 
-export const getEatCompletion = async (
+export const getQuestionsCompletion = async (
+  chatHistory: ChatItem[] = []
+) => {
+  const res = await Taro.cloud.callContainer({
+    path: '/api/recommend/questions',
+    header: {
+      'X-WX-SERVICE': 'express-fh13',
+    },
+    timeout: 15 * 1000,
+    method: 'POST',
+    data: {
+      history: chatHistory
+    },
+  });
+  return res.data?.data;
+};
+
+export const getRestaurantCompletion = async (
   eatList,
   chatHistory: ChatItem[] = []
 ) => {
   const res = await Taro.cloud.callContainer({
-    path: '/api/recommend',
+    path: '/api/recommend/restaurants',
     header: {
       'X-WX-SERVICE': 'express-fh13',
     },
@@ -57,14 +74,4 @@ export const getEatCompletion = async (
     },
   });
   return res.data?.data;
-
-  const { result } = await Taro.cloud.callFunction({
-    name: 'eatChat',
-    data: {
-      eatList,
-      chatHistory,
-    },
-  });
-
-  return result;
 };
