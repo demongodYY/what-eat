@@ -77,8 +77,9 @@ export default function Index() {
     });
     try {
       const resFromAI = await getQuestionsCompletion(chatHistoryBefore);
-      const { question } = JSON.parse(resFromAI);
       console.log("resFromAI", resFromAI);
+      const question = getQuestion(resFromAI);
+      console.log("question", question);
       if (question) {
         const AIResponseHistory: ChatItem[] = [
           ...chatHistoryBefore,
@@ -89,7 +90,7 @@ export default function Index() {
         ];
         setChatHistory(AIResponseHistory);
       } else {
-        const { keyword } = JSON.parse(resFromAI);
+        const keyword = getKeyword(resFromAI);
         console.log("keyword", keyword);
         const foundRestaurants = await onSearch(keyword);
         const recommandRestaurant = await getRestaurantCompletion(foundRestaurants, chatHistory);
@@ -109,6 +110,34 @@ export default function Index() {
       hideLoading();
     }
   };
+
+  const getKeyword = ( resFromAI: string) => {
+    try {
+      const { keyword } = JSON.parse(resFromAI);
+      if(keyword) {
+        return keyword;
+      }
+      return null;
+    } catch(e) {
+      console.log("AI return something is not JSON format");
+      return resFromAI;
+    }
+  }
+
+  const getQuestion = (resFromAI: string) => {
+    try {
+      const { question } = JSON.parse(resFromAI);
+      if(question) {
+        return question;
+      } else {
+        return null;
+      }
+    } catch(e) {
+      console.log("AI return something is not JSON format");
+      return resFromAI;
+    }
+  }
+
 
   return (
     <View>
