@@ -32,17 +32,7 @@ export const getPeriod = (): string => {
   return '晚餐';
 };
 
-export const getMapConfig = async () => {
-  const mapConfig = Taro.getStorageSync('MAP_CONFIG') ?? {};
-  if (mapConfig?.MAP_KEY) return mapConfig;
-  const { result } = await Taro.cloud.callFunction({ name: 'getMapConfig' });
-  Taro.setStorageSync('MAP_CONFIG', result);
-  return result;
-};
-
-export const getQuestionsCompletion = async (
-  chatHistory: ChatItem[] = []
-) => {
+export const getQuestionsCompletion = async (chatHistory: ChatItem[] = []) => {
   const res = await Taro.cloud.callContainer({
     path: '/api/recommend/questions',
     header: {
@@ -51,7 +41,7 @@ export const getQuestionsCompletion = async (
     timeout: 15 * 1000,
     method: 'POST',
     data: {
-      history: chatHistory
+      history: chatHistory,
     },
   });
   return res.data?.data;

@@ -29,7 +29,8 @@ export interface ChatItem {
 export default function Index() {
   const [inputString, setInputString] = useState<string>('');
   const [chatHistory, setChatHistory] = useState<ChatItem[]>([]);
-  const [recommandRestaurant, setRecommandRestaurant] = useState<any>(undefined);
+  const [recommandRestaurant, setRecommandRestaurant] =
+    useState<any>(undefined);
   const mapSdkRef = useRef<QQMapWX | null>(null);
 
   useLoad(async () => {
@@ -69,17 +70,15 @@ export default function Index() {
     });
   };
 
-  const chatWithAI = async (
-    chatHistoryBefore: ChatItem[]
-  ) => {
+  const chatWithAI = async (chatHistoryBefore: ChatItem[]) => {
     showLoading({
       title: 'AI 思考中...',
     });
     try {
       const resFromAI = await getQuestionsCompletion(chatHistoryBefore);
-      console.log("resFromAI", resFromAI);
+      console.log('resFromAI', resFromAI);
       const question = getQuestion(resFromAI);
-      console.log("question", question);
+      console.log('question', question);
       if (question) {
         const AIResponseHistory: ChatItem[] = [
           ...chatHistoryBefore,
@@ -91,16 +90,18 @@ export default function Index() {
         setChatHistory(AIResponseHistory);
       } else {
         const keyword = getKeyword(resFromAI);
-        console.log("keyword", keyword);
+        console.log('keyword', keyword);
         const foundRestaurants = await onSearch(keyword);
-        const recommandRestaurant = await getRestaurantCompletion(foundRestaurants, chatHistory);
-        const { name } = JSON.parse(recommandRestaurant);
+        const recommandRestaurantInfo = await getRestaurantCompletion(
+          foundRestaurants,
+          chatHistory
+        );
+        const { name } = JSON.parse(recommandRestaurantInfo);
         const restDetail = foundRestaurants.find(({ title }) => title === name);
-        console.log("recommandRestaurant", recommandRestaurant);
+        console.log('recommandRestaurant', recommandRestaurantInfo);
         setRecommandRestaurant(restDetail);
-        console.log("recommandRestaurant", recommandRestaurant);
+        console.log('recommandRestaurant', recommandRestaurantInfo);
       }
-
     } catch (e) {
       showToast({
         title: '哎呀出错了！重新再问一下吧',
@@ -111,33 +112,32 @@ export default function Index() {
     }
   };
 
-  const getKeyword = ( resFromAI: string) => {
+  const getKeyword = (resFromAI: string) => {
     try {
       const { keyword } = JSON.parse(resFromAI);
-      if(keyword) {
+      if (keyword) {
         return keyword;
       }
       return null;
-    } catch(e) {
-      console.log("AI return something is not JSON format");
+    } catch (e) {
+      console.log('AI return something is not JSON format');
       return resFromAI;
     }
-  }
+  };
 
   const getQuestion = (resFromAI: string) => {
     try {
       const { question } = JSON.parse(resFromAI);
-      if(question) {
+      if (question) {
         return question;
       } else {
         return null;
       }
-    } catch(e) {
-      console.log("AI return something is not JSON format");
+    } catch (e) {
+      console.log('AI return something is not JSON format');
       return resFromAI;
     }
-  }
-
+  };
 
   return (
     <View>
@@ -162,10 +162,11 @@ export default function Index() {
               </View>
             );
           })}
-          {recommandRestaurant &&
+          {recommandRestaurant && (
             <View className={styles.chatItemAI}>
               <RestaurantCard restaurant={recommandRestaurant} />
-            </View>}
+            </View>
+          )}
         </ScrollView>
 
         <View className={styles.bottomInputWrapper}>
