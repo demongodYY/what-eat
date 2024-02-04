@@ -24,13 +24,14 @@ const MAP_SDK_KEY = '34ZBZ-AMFCO-2ZGWD-SNT2V-AYMDJ-QFF63';
 export interface ChatItem {
   role: 'AI' | 'Human';
   content: string;
+  recommandRestaurant?: any;
 }
 
 export default function Index() {
   const [inputString, setInputString] = useState<string>('');
   const [chatHistory, setChatHistory] = useState<ChatItem[]>([]);
-  const [recommandRestaurant, setRecommandRestaurant] =
-    useState<any>(undefined);
+  const [currentChatItem, setChatItem] = useState<string>('');
+
   const mapSdkRef = useRef<QQMapWX | null>(null);
 
   useLoad(async () => {
@@ -40,15 +41,11 @@ export default function Index() {
   });
 
   useReady(async () => {
-    setRecommandRestaurant(undefined);
     await chatWithAI([]);
   });
 
   const onSearch = async (keyword: string) => {
     return new Promise<any[]>((resolve, reject) => {
-      showLoading({
-        title: '疯狂搜索中...',
-      });
       mapSdkRef.current?.search({
         keyword: keyword,
         page_size: 20,
@@ -63,9 +60,6 @@ export default function Index() {
           });
           reject(res);
         },
-        complete: () => {
-          hideLoading();
-        },
       });
     });
   };
@@ -76,9 +70,8 @@ export default function Index() {
     });
     try {
       const resFromAI = await getQuestionsCompletion(chatHistoryBefore);
-      console.log('resFromAI', resFromAI);
-      const question = getQuestion(resFromAI);
-      console.log('question', question);
+      // const resFromAI = { question: 'hahah' };
+      const { question, keyword } = resFromAI;
       if (question) {
         const AIResponseHistory: ChatItem[] = [
           ...chatHistoryBefore,
@@ -88,19 +81,42 @@ export default function Index() {
           },
         ];
         setChatHistory(AIResponseHistory);
-      } else {
-        const keyword = getKeyword(resFromAI);
+      } else if (keyword) {
         console.log('keyword', keyword);
         const foundRestaurants = await onSearch(keyword);
+        if (foundRestaurants?.length === 0) {
+          showToast({
+            title: '没有找到合适的餐馆，重新聊聊吧',
+          });
+          setChatHistory(chatHistoryBefore);
+          return;
+        }
+        console.log(foundRestaurants);
         const recommandRestaurantInfo = await getRestaurantCompletion(
           foundRestaurants,
-          chatHistory
+          chatHistoryBefore
         );
-        const { name } = JSON.parse(recommandRestaurantInfo);
-        const restDetail = foundRestaurants.find(({ title }) => title === name);
-        console.log('recommandRestaurant', recommandRestaurantInfo);
-        setRecommandRestaurant(restDetail);
-        console.log('recommandRestaurant', recommandRestaurantInfo);
+        const { recommendEat } = recommandRestaurantInfo ?? {};
+
+        const restDetail = foundRestaurants.find(
+          ({ id }) => id === recommendEat?.id
+        );
+        if (restDetail?.length === 0) {
+          showToast({
+            title: '没有找到合适的餐馆，重新聊聊吧',
+          });
+          setChatHistory(chatHistoryBefore);
+          return;
+        }
+        const AIResponseHistory: ChatItem[] = [
+          ...chatHistoryBefore,
+          {
+            role: 'AI',
+            content: `为你推荐了${recommendEat?.title}, ${recommendEat?.reason}。如果您还有更多需求，可以继续跟我说。`,
+            recommandRestaurant: restDetail,
+          },
+        ];
+        setChatHistory(AIResponseHistory);
       }
     } catch (e) {
       showToast({
@@ -109,72 +125,61 @@ export default function Index() {
       console.error(e);
     } finally {
       hideLoading();
-    }
-  };
-
-  const getKeyword = (resFromAI: string) => {
-    try {
-      const { keyword } = JSON.parse(resFromAI);
-      if (keyword) {
-        return keyword;
-      }
-      return null;
-    } catch (e) {
-      console.log('AI return something is not JSON format');
-      return resFromAI;
-    }
-  };
-
-  const getQuestion = (resFromAI: string) => {
-    try {
-      const { question } = JSON.parse(resFromAI);
-      if (question) {
-        return question;
-      } else {
-        return null;
-      }
-    } catch (e) {
-      console.log('AI return something is not JSON format');
-      return resFromAI;
+      setTimeout(() => {
+        setChatItem(`chatItem${chatHistory.length - 1}`);
+      }, 0);
     }
   };
 
   return (
     <View>
       <View className={styles.home}>
-        {/* <Image src={HomeImage} mode="widthFix" className={styles.banner} />
-          <Button type="primary" onClick={onSearch} className={styles.tryBtn}>
-            点我试试
-          </Button> */}
-        <ScrollView className={styles.chatWrapper} scrollY scrollWithAnimation>
-          {chatHistory.map((item, index) => {
-            const { role, content } = item;
-            return (
-              <View
-                className={
-                  role === 'AI' ? styles.chatItemAI : styles.chatItemHuman
-                }
-                key={index}
-              >
-                <Text>
-                  {role}: {content}
-                </Text>
-              </View>
-            );
-          })}
-          {recommandRestaurant && (
-            <View className={styles.chatItemAI}>
-              <RestaurantCard restaurant={recommandRestaurant} />
-            </View>
-          )}
-        </ScrollView>
+        <View className={styles.title}>今天吃什么：智能餐馆推荐</View>
+        <View className={styles.chatContainer}>
+          <ScrollView
+            className={styles.chatWrapper}
+            scrollY
+            scrollWithAnimation
+            scrollIntoView={currentChatItem}
+          >
+            {chatHistory.map((item, index) => {
+              const { role, content, recommandRestaurant } = item;
+              return (
+                <>
+                  {recommandRestaurant && (
+                    <View className={styles.chatItem}>
+                      <RestaurantCard restaurant={recommandRestaurant} />
+                    </View>
+                  )}
+                  <View
+                    id={`chatItem${index}`}
+                    className={styles.chatItem}
+                    key={index}
+                  >
+                    <Text
+                      className={
+                        role === 'AI' ? styles.chatItemAI : styles.chatItemHuman
+                      }
+                    >
+                      {content}
+                    </Text>
+                  </View>
+                </>
+              );
+            })}
+          </ScrollView>
+        </View>
 
         <View className={styles.bottomInputWrapper}>
           <Input
             className={styles.bottomInput}
             value={inputString}
+            focus
+            placeholder="随便说点啥吧"
             onInput={(evt) => setInputString(evt.detail.value)}
             type="text"
+            confirm-type="send"
+            cursor={inputString.length}
           />
           <Button
             className={styles.bottomBtn}

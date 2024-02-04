@@ -42,6 +42,8 @@ export const getQuestionsCompletion = async (chatHistory: ChatItem[] = []) => {
     method: 'POST',
     data: {
       history: chatHistory,
+      period: getPeriod(),
+      location: '中国',
     },
   });
   return res.data?.data;
@@ -61,6 +63,8 @@ export const getRestaurantCompletion = async (
     data: {
       history: chatHistory,
       eatList,
+      period: getPeriod(),
+      location: '中国',
     },
   });
   return res.data?.data;
