@@ -1,6 +1,7 @@
 import { View, Button, Map } from '@tarojs/components';
 import marker32 from '@/assets/marker32.png';
 import styles from './restaurantCard.module.less';
+import { openLocation } from '@tarojs/taro';
 
 export default ({ restaurant }) => {
   const marker = {
@@ -13,6 +14,15 @@ export default ({ restaurant }) => {
     iconPath: marker32,
   };
 
+  const bindMarkerTap = () => {
+    openLocation({
+      latitude: restaurant?.location?.lat,
+      longitude: restaurant?.location?.lng,
+      name: restaurant?.title,
+      address: restaurant?.address,
+    });
+  };
+
   return (
     <View className={styles.result}>
       <Map
@@ -23,6 +33,7 @@ export default ({ restaurant }) => {
         latitude={restaurant?.location?.lat}
         scale={17}
         showLocation
+        onMarkerTap={bindMarkerTap}
       />
       <View className={styles.recommend}>
         <View>店名：{restaurant?.title}</View>
@@ -31,7 +42,9 @@ export default ({ restaurant }) => {
         <View>距离：{restaurant?._distance} 米</View>
       </View>
       <View className={styles.operation}>
-        <Button type="warn">点击前往</Button>
+        <Button type="warn" onClick={bindMarkerTap}>
+          点击前往
+        </Button>
       </View>
     </View>
   );
