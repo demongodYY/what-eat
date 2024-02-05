@@ -27,9 +27,10 @@ export const formatNumber = (n) => {
 
 export const getPeriod = (): string => {
   const currentHour = new Date().getHours();
-  if (currentHour < 10) return '早餐';
-  if (currentHour > 10 && currentHour < 2) return '午餐';
-  return '晚餐';
+  if (currentHour >= 5 && currentHour < 10) return '早餐';
+  if (currentHour >= 10 && currentHour < 15) return '午餐';
+  if (currentHour >= 15 && currentHour < 22) return '晚餐';
+  return '夜宵';
 };
 
 export const getQuestionsCompletion = async (chatHistory: ChatItem[] = []) => {

@@ -1,20 +1,14 @@
 import { useRef, useState } from 'react';
-import {
-  useLoad,
-  useReady,
-  showToast,
-  showLoading,
-  hideLoading,
-} from '@tarojs/taro';
+import { useLoad, showToast, showLoading, hideLoading } from '@tarojs/taro';
 import {
   View,
   Button,
   Text,
-  // Image,
+  Image,
   Input,
   ScrollView,
 } from '@tarojs/components';
-// import HomeImage from '@/assets/topic.png';
+import HomeImage from '@/assets/topic.png';
 import QQMapWX from '@/assets/js/qqmap-wx-jssdk1.2/qqmap-wx-jssdk.min.js';
 import { getQuestionsCompletion, getRestaurantCompletion } from '@/utils';
 import RestaurantCard from './components/restaurantCard';
@@ -38,10 +32,6 @@ export default function Index() {
     mapSdkRef.current = new QQMapWX({
       key: MAP_SDK_KEY,
     });
-  });
-
-  useReady(async () => {
-    await chatWithAI([]);
   });
 
   const onSearch = async (keyword: string) => {
@@ -133,70 +123,83 @@ export default function Index() {
 
   return (
     <View>
-      <View className={styles.home}>
-        <View className={styles.title}>今天吃什么：智能餐馆推荐</View>
-        <View className={styles.chatContainer}>
-          <ScrollView
-            className={styles.chatWrapper}
-            scrollY
-            scrollWithAnimation
-            scrollIntoView={currentChatItem}
-          >
-            {chatHistory.map((item, index) => {
-              const { role, content, recommandRestaurant } = item;
-              return (
-                <>
-                  {recommandRestaurant && (
-                    <View className={styles.chatItem}>
-                      <RestaurantCard restaurant={recommandRestaurant} />
-                    </View>
-                  )}
-                  <View
-                    id={`chatItem${index}`}
-                    className={styles.chatItem}
-                    key={index}
-                  >
-                    <Text
-                      className={
-                        role === 'AI' ? styles.chatItemAI : styles.chatItemHuman
-                      }
-                    >
-                      {content}
-                    </Text>
-                  </View>
-                </>
-              );
-            })}
-          </ScrollView>
-        </View>
-
-        <View className={styles.bottomInputWrapper}>
-          <Input
-            className={styles.bottomInput}
-            value={inputString}
-            focus
-            placeholder="随便说点啥吧"
-            onInput={(evt) => setInputString(evt.detail.value)}
-            type="text"
-            confirm-type="send"
-            cursor={inputString.length}
-          />
-          <Button
-            className={styles.bottomBtn}
-            onClick={async () => {
-              const humanInputHistory: ChatItem[] = [
-                ...chatHistory,
-                { role: 'Human', content: inputString },
-              ];
-              chatWithAI(humanInputHistory);
-              setInputString('');
-            }}
-            type="warn"
-          >
-            提交
+      <View className={styles.title}>这一顿吃什么：智能餐馆推荐</View>
+      {!chatHistory.length ? (
+        <View className={styles.preWrapper}>
+          <Image src={HomeImage} mode="widthFix" className={styles.banner} />
+          <Button type="primary" onClick={() => chatWithAI([])}>
+            🤔这一顿吃什么？🤖点击这聊聊看！
           </Button>
         </View>
-      </View>
+      ) : (
+        <View className={styles.home}>
+          <View className={styles.chatContainer}>
+            <ScrollView
+              className={styles.chatWrapper}
+              scrollY
+              scrollWithAnimation
+              scrollIntoView={currentChatItem}
+            >
+              {chatHistory.map((item, index) => {
+                const { role, content, recommandRestaurant } = item;
+                return (
+                  <>
+                    {recommandRestaurant && (
+                      <View className={styles.chatItem}>
+                        <RestaurantCard restaurant={recommandRestaurant} />
+                      </View>
+                    )}
+                    <View
+                      id={`chatItem${index}`}
+                      className={styles.chatItem}
+                      key={index}
+                    >
+                      <Text
+                        className={
+                          role === 'AI'
+                            ? styles.chatItemAI
+                            : styles.chatItemHuman
+                        }
+                      >
+                        {content}
+                      </Text>
+                    </View>
+                  </>
+                );
+              })}
+            </ScrollView>
+          </View>
+
+          <View className={styles.bottomInputWrapper}>
+            <Input
+              className={styles.bottomInput}
+              value={inputString}
+              focus
+              placeholder="随便说点啥吧"
+              onInput={(evt) => setInputString(evt.detail.value)}
+              type="text"
+              confirm-type="send"
+              cursor={inputString.length}
+            />
+            <Button
+              className={styles.bottomBtn}
+              onClick={async () => {
+                const textValue = inputString.trim();
+                if (!textValue.length) return;
+                const humanInputHistory: ChatItem[] = [
+                  ...chatHistory,
+                  { role: 'Human', content: textValue },
+                ];
+                chatWithAI(humanInputHistory);
+                setInputString('');
+              }}
+              type="primary"
+            >
+              提交
+            </Button>
+          </View>
+        </View>
+      )}
     </View>
   );
 }
