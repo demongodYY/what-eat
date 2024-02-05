@@ -72,16 +72,22 @@ export default function Index() {
         ];
         setChatHistory(AIResponseHistory);
       } else if (keyword) {
-        console.log('keyword', keyword);
         const foundRestaurants = await onSearch(keyword);
         if (foundRestaurants?.length === 0) {
           showToast({
             title: '没有找到合适的餐馆，重新聊聊吧',
           });
-          setChatHistory(chatHistoryBefore);
+          const AIResponseHistory: ChatItem[] = [
+            ...chatHistoryBefore,
+            {
+              role: 'AI',
+              content:
+                '我在附近没有找到符合您要求的餐馆，可以再详细描述一下吗？',
+            },
+          ];
+          setChatHistory(AIResponseHistory);
           return;
         }
-        console.log(foundRestaurants);
         const recommandRestaurantInfo = await getRestaurantCompletion(
           foundRestaurants,
           chatHistoryBefore
@@ -95,14 +101,22 @@ export default function Index() {
           showToast({
             title: '没有找到合适的餐馆，重新聊聊吧',
           });
-          setChatHistory(chatHistoryBefore);
+          const AIResponseHistory: ChatItem[] = [
+            ...chatHistoryBefore,
+            {
+              role: 'AI',
+              content:
+                '我在附近没有找到符合您要求的餐馆，可以再详细描述一下吗？',
+            },
+          ];
+          setChatHistory(AIResponseHistory);
           return;
         }
         const AIResponseHistory: ChatItem[] = [
           ...chatHistoryBefore,
           {
             role: 'AI',
-            content: `为你推荐了${recommendEat?.title}, ${recommendEat?.reason}。如果您还有更多需求，可以继续跟我说。`,
+            content: `为您推荐了${recommendEat?.title}, ${recommendEat?.reason}。如果您还有更多需求，可以继续跟我说。`,
             recommandRestaurant: restDetail,
           },
         ];
