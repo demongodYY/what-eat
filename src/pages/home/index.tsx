@@ -174,7 +174,6 @@ export default function Index() {
             <Input
               className={styles.bottomInput}
               value={inputString}
-              focus
               placeholder="随便说点啥吧"
               onInput={(evt) => setInputString(evt.detail.value)}
               type="text"
